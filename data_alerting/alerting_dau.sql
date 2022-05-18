@@ -12,7 +12,7 @@
             'total' AS dim,
             'total' AS dim_value,
             SUM(dau_cnt) AS cnt
-       FROM `happn-analytics.stats.bi_dau`
+       FROM `happn.organizations`
       WHERE _PARTITIONDATE >= DATE_SUB(current_date, INTERVAL 180 DAY)
    GROUP BY 1, 2, 3, 4
   UNION ALL
@@ -21,7 +21,7 @@
             'last_os' AS dim,
             last_os AS dim_value,
             SUM(dau_cnt) AS cnt
-       FROM `happn-analytics.stats.bi_dau`
+       FROM `happn.organizations`
       WHERE _PARTITIONDATE >= DATE_SUB(current_date, INTERVAL 180 DAY)
         AND last_os IN ("android", "ios")
    GROUP BY 1, 2, 3, 4
@@ -31,7 +31,7 @@
            'gender_d0' AS dim,
            gender_d0 AS dim_value,
            SUM(dau_cnt) AS cnt
-      FROM `happn-analytics.stats.bi_dau`
+      FROM `happn.organizations`
      WHERE _PARTITIONDATE >= DATE_SUB(current_date, INTERVAL 180 DAY)
        AND gender_d0 IN ("male", "female")
   GROUP BY 1, 2, 3, 4
@@ -44,7 +44,7 @@
                 ELSE "old reg"
            END AS dim_value,
            SUM(dau_cnt) AS cnt
-      FROM `happn-analytics.stats.bi_dau`
+      FROM `happn.organizations`
      WHERE _PARTITIONDATE >= DATE_SUB(current_date, INTERVAL 180 DAY)
   GROUP BY 1, 2, 3, 4)),
 
@@ -76,9 +76,8 @@
             cnt,
             quantile_25,
             quantile_75,
-            CAST(bounds.bound AS float64) as bound,
-            quantile_25 - CAST(bounds.bound AS float64) * (quantile_75 - quantile_25) AS lower_bound_scale_1_5,
-            quantile_75 + CAST(bounds.bound AS float64) * (quantile_75 - quantile_25) AS upper_bound_scale_1_5,
+            quantile_25 - 1.5 * (quantile_75 - quantile_25) AS lower_bound_scale_1_5,
+            quantile_75 + 1.5 * (quantile_75 - quantile_25) AS upper_bound_scale_1_5,
             quantile_25 - 1 * (quantile_75 - quantile_25) AS lower_bound_scale_1,
             quantile_75 + 1 * (quantile_75 - quantile_25) AS upper_bound_scale_1,
             quantile_25 - 2 * (quantile_75 - quantile_25) AS lower_bound_scale_2,
@@ -86,6 +85,3 @@
             quantile_25 - 2.5 * (quantile_75 - quantile_25) AS lower_bound_scale_2_5,
             quantile_75 + 2.5 * (quantile_75 - quantile_25) AS upper_bound_scale_2_5
        FROM quantiles_cnt
-  LEFT JOIN `happn-analytics.rule.alerting_bounds` bounds 
-         ON bounds.kpi = "DAU volume" 
-        AND bounds.dimension = quantiles_cnt.dim

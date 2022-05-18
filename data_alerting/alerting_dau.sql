@@ -1,4 +1,4 @@
-#data-reporting/reporting/view/tableau/
+--data-reporting/reporting/view/tableau/
 
 ######################################################################################################
 # GET DAU LAST 90 DAYS
